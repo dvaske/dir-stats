@@ -60,13 +60,10 @@ def largest_files(content, num_of_files):
 
 
 def analyze_dir(files, dirs):
-
     file_types = extract_file_types(files, dirs)
     total_files = 0
     for type in sorted(file_types.keys()):
-        #print 'Number of %s: %d' %(type, len(file_types[type]))
         total_files += len(file_types[type])
-    #print "Total files: %d" %total_files
 
     size_info, total_size = extract_size_info(files, file_types, dirs)
     return file_types, size_info, total_size
@@ -142,9 +139,7 @@ def longest_path( paths ):
     return max(paths, key=key)
 
 
-
-
-def get_dir_stats(dir, num_of_largest):
+def get_dir_stats(dir, num_of_largest=50):
     files = get_files(dir)
     dirs = get_dirs(dir)
     file_types, size_info,total_size = analyze_dir(files, dirs)
@@ -160,7 +155,7 @@ def main():
         num_of_largest = sys.argv[2]
 
     dir = dir.strip('/')
-    files, dirs, file_types, size_info,total_size, empty, largest, longest_path = get_dir_stats(dir, num_of_largest)
+    files, dirs, file_types, size_info,total_size, empty, largest, longest_path = get_dir_stats(dir, num_of_largest=num_of_largest)
     print '{0:<15} {1:>6s} {2:>12s}'.format('File types', 'count', 'size')
     for type in sorted(file_types.keys()):
         print '{0:.<15}.{1:.>6s}.{2:.>12s}'.format(type, str(len(file_types[type])), pretty_print_size(size_info[type]))
