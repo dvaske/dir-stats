@@ -154,6 +154,10 @@ def get_dir_stats(dir):
     largest = largest_files(files, 50)
     for file, size in largest:
         print pretty_print_size(size), file
+
+    print "Total number of files %d" %len(files.keys())
+    print "Total number of directories %d" % len(dirs.keys())
+    print "Total entries in %s: %d" % (dir, len(files.keys())+len(dirs.keys()))
     print "Total size %s" % pretty_print_size(total_size)
 
     path = longest_path(dirs.keys())
