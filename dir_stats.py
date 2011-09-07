@@ -8,11 +8,11 @@ Run analysis on directory
 Created by Aske Olsson 2011-09-05.
 Copyright (c) 2011 Aske Olsson. All rights reserved.
 """
-#!/usr/bin/env python
-# encoding: utf-8
+
 import os
 from subprocess import Popen, PIPE
 import operator
+import sys
 
 def extract_file_types(files, dirs):
     dict = {}
@@ -141,17 +141,29 @@ def longest_path( paths ):
     key = lambda path:path.count('/')
     return max(paths, key=key)
 
-def get_dir_stats(dir):
-    dir = dir.strip('/')
+
+
+
+def get_dir_stats(dir, num_of_largest):
     files = get_files(dir)
     dirs = get_dirs(dir)
     file_types, size_info,total_size = analyze_dir(files, dirs)
-#    return file_types, size_info
+    empty = find_empty_dirs(files, dirs)
+    largest = largest_files(files, num_of_largest)
+    path = longest_path(dirs.keys())
+    return files, dirs, file_types, size_info, total_size, empty, largest, path
+
+def main():
+    num_of_largest = 50
+    dir = sys.argv[1]
+    if len(sys.argv) > 2:
+        num_of_largest = sys.argv[2]
+
+    dir = dir.strip('/')
+    files, dirs, file_types, size_info,total_size, empty, largest, longest_path = get_dir_stats(dir, num_of_largest)
     print '{0:<15} {1:>6s} {2:>12s}'.format('File types', 'count', 'size')
     for type in sorted(file_types.keys()):
         print '{0:.<15}.{1:.>6s}.{2:.>12s}'.format(type, str(len(file_types[type])), pretty_print_size(size_info[type]))
-        #print 'Size of %s files: %d kb' %(type, size_info[type]/(1024))
-    largest = largest_files(files, 50)
     for file, size in largest:
         print pretty_print_size(size), file
 
@@ -159,14 +171,8 @@ def get_dir_stats(dir):
     print "Total number of directories %d" % len(dirs.keys())
     print "Total entries in %s: %d" % (dir, len(files.keys())+len(dirs.keys()))
     print "Total size %s" % pretty_print_size(total_size)
-
-    path = longest_path(dirs.keys())
-    print "Longest path: ", path
-
-    empty = find_empty_dirs(files, dirs)
-    #print "empty:"
-    #print '\n'.join(empty)
+    print "Longest path: ", longest_path
     print 'Empty directories: %d' %len(empty)
 
-
-
+if __name__ == '__main__':
+    main()
