@@ -4,6 +4,9 @@
 dir-stats.py
 
 Run analysis on directory
+Can walk the directory or parse a file with the format as printed by find with
+the following options:
+find <dir> -printf "%Y %s %p\n"
 
 Created by Aske Olsson 2011-09-05.
 Copyright (c) 2011 Aske Olsson. All rights reserved.
@@ -69,25 +72,38 @@ def analyze_dir(files, dirs):
     return file_types, size_info, total_size
 
 
-def format_content(content):
-    dict = {}
+def format_content(file):
+    """ Read content of directory from a file.
+    Use find <dir> -printf "%Y %s %p\n" to generate
+    """
+    f = open(file, 'rb')
+    content = f.read()
+    f.close()
+
+    files = {}
+    dirs = {}
     for line in content.splitlines():
-        tmp = line.split('|SPLIT|')
-        dict[tmp[0]] = float(tmp[1])
+        type, size, path = line.split(' ', 2)
+        if type == 'd':
+            dirs[path] = float(size)
+        else:
+            files[path] = float(size)
 
-    return dict
+    return files, dirs
 
-def get_files(dir):
-    cmd = ['find', dir, '-type', 'f', '-printf', '%p|SPLIT|%s\n']
-    content = run_command(cmd)
-    content = format_content(content)
-    return content
-
-def get_dirs(dir):
-    cmd = ['find', dir, '-type', 'd', '-printf', '%p|SPLIT|%s\n']
-    content = run_command(cmd)
-    content = format_content(content)
-    return content
+def get_content(dir):
+    files_dict = {}
+    directories = {}
+    for root, dirs, files in os.walk(dir):
+        for fn in files:
+            path = os.path.join(root, fn)
+            size = os.stat(path).st_size # in bytes
+            files_dict[path] = float(size)
+        for dir in dirs:
+            path = os.path.join(root, dir)
+            size = os.stat(path).st_size # in bytes
+            directories[path] = float(size)
+    return files_dict, directories
 
 def find_empty_dirs(files, dirs):
     # Used dirs:
@@ -140,8 +156,11 @@ def longest_path( paths ):
 
 
 def get_dir_stats(dir, num_of_largest=50):
-    files = get_files(dir)
-    dirs = get_dirs(dir)
+    # Determine is input is a file (find <dir> .printf  "%Y %s %p\n"
+    if os.path.isfile(dir):
+        files, dirs = format_content(dir)
+    else:
+        files, dirs = get_content(dir)
     file_types, size_info,total_size = analyze_dir(files, dirs)
     empty = find_empty_dirs(files, dirs)
     largest = largest_files(files, num_of_largest)
