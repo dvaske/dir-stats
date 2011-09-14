@@ -154,6 +154,34 @@ def longest_path( paths ):
     key = lambda path:path.count('/')
     return max(paths, key=key)
 
+def subdir_size(files, dirs):
+    """ Calculate size, members and depth of subdirs """
+    subdirs = {}
+    for file, size in files.iteritems():
+        path, fn = os.path.split(file)
+        # add size and count to all dirs under path
+        splitted = path.split('/')
+        for i, p in enumerate(splitted):
+            dir = '/'.join(splitted[0:i+1])
+            if subdirs.has_key(dir):
+                subdirs[dir]['size'] += size
+                subdirs[dir]['members'].append(file)
+            else:
+                subdirs[dir] = {'size': size, 'depth': dir.count('/'), 'members': [file]}
+    for path, size in dirs.iteritems():
+        # add size and count to all dirs under path
+        splitted = path.split('/')
+        for i, p in enumerate(splitted):
+            dir = '/'.join(splitted[0:i+1])
+            if subdirs.has_key(dir):
+                subdirs[dir]['size'] += size
+                subdirs[dir]['members'].append(dir)
+            else:
+                subdirs[dir] = {'size': size, 'depth': dir.count('/'), 'members': [dir]}
+
+#    for dir in sorted(subdirs.keys()):
+#        print dir, 'members', len(subdirs[dir]['members']), 'size', pretty_print_size(subdirs[dir]['size']), 'depth', subdirs[dir]['depth']
+    return subdirs
 
 def get_dir_stats(dir, num_of_largest=50):
     # Determine is input is a file (find <dir> .printf  "%Y %s %p\n"
@@ -165,7 +193,8 @@ def get_dir_stats(dir, num_of_largest=50):
     empty = find_empty_dirs(files, dirs)
     largest = largest_files(files, num_of_largest)
     path = longest_path(dirs.keys())
-    return files, dirs, file_types, size_info, total_size, empty, largest, path
+    subdirs = subdir_size(files, dirs)
+    return files, dirs, file_types, size_info, total_size, empty, largest, path, subdirs
 
 def main():
     num_of_largest = 50
